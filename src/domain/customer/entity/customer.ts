@@ -1,3 +1,8 @@
+import EventDispatcher from "../../@shared/event/event-dispatcher";
+import CustomerCreateEvent from "../event/customer-create.event";
+import SendAddressChangeHandler from "../event/handler/send-address-change-log.handler";
+import SendLog1Handler from "../event/handler/send-log1.handler";
+import SendLog2Handler from "../event/handler/send-log2.handler";
 import Address from "../value-object/address";
 
 export default class Customer {
@@ -6,11 +11,22 @@ export default class Customer {
   private _address!: Address;
   private _active: boolean = false;
   private _rewardPoints: number = 0;
+  private _eventDispatcher: EventDispatcher;
+  private static _eventHandler1: SendLog1Handler;
+  private static _eventHandler2: SendLog2Handler;
+  private static _eventHandlerAddress: SendAddressChangeHandler;
 
   constructor(id: string, name: string) {
     this._id = id;
     this._name = name;
     this.validate();
+    this._eventDispatcher = new EventDispatcher();
+    this._eventDispatcher.register("CustomerCreateEvent", Customer._eventHandler1);
+    this._eventDispatcher.register("CustomerCreateEvent", Customer._eventHandler2);
+
+    const customerCreateEvent = new CustomerCreateEvent({});
+
+    this._eventDispatcher.notify(customerCreateEvent);
   }
 
   get id(): string {
@@ -68,5 +84,17 @@ export default class Customer {
 
   set Address(address: Address) {
     this._address = address;
+  }
+
+  static getEventHandler1(): SendLog1Handler {
+    return Customer._eventHandler1 = new SendLog1Handler();
+  }
+
+  static getEventHandler2(): SendLog2Handler {
+    return Customer._eventHandler2 = new SendLog2Handler();
+  }
+
+  static getEventHandlerAddress(): SendAddressChangeHandler {
+    return Customer._eventHandlerAddress = new SendAddressChangeHandler();
   }
 }
